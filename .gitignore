@@ -1,0 +1,8 @@
+node_modules/
+.env
+/config/.env.*
+/upload
+cloudinary.js
+.env.development
+.env.production
+/src/config/*.json
