@@ -32,9 +32,14 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const user_enum_1 = require("../../common/enum/user.enum");
+const post_model_1 = __importDefault(require("./post.model"));
+const comment_model_1 = __importDefault(require("./comment.model"));
 const userSchema = new mongoose_1.default.Schema({
     firstName: {
         type: String,
@@ -83,6 +88,24 @@ userSchema.virtual("username").get(function () {
     const [firstName, lastName] = value.split(" ");
     this.firstName = firstName;
     this.lastName = lastName;
+});
+userSchema.virtual("posts", {
+    ref: "Post",
+    localField: "_id",
+    foreignField: "createdBy"
+});
+userSchema.pre("deleteOne", { document: true, query: false }, async function () {
+    const user = this;
+    const posts = await post_model_1.default.find({
+        createdBy: user._id
+    });
+    const postIds = posts.map(p => p._id);
+    await comment_model_1.default.deleteMany({
+        postId: { $in: postIds }
+    });
+    await post_model_1.default.deleteMany({
+        createdBy: user._id
+    });
 });
 const userModel = mongoose_1.default.models.User || mongoose_1.default.model("User", userSchema);
 exports.default = userModel;

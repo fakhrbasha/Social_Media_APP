@@ -335,6 +335,33 @@ class UserService {
         return res.status(201).json({ message: "done", data: { url, Key } })
     }
 
+    getMyProfile = async (req: Request, res: Response, next: NextFunction) => {
+        const user = await this._userModel.findOne({
+            filter: { _id: req.user._id }
+        })
+        if (!user)
+            throw new AppError("user not found", 404)
+        const userWithPosts = await this._userModel.findOne({
+            filter: { _id: req.user._id },
+            options: {
+                populate: [
+                    {
+                        path: "posts",
+                        model: "post",
+                        select: "_id content images attachments tags createdAt updatedAt likes commentsCount repliesCount -createdBy",
+                    }
+                ]
+            }
+        })
+        if (!userWithPosts)
+            throw new AppError("user not found", 404)
+        return res.status(200).json({
+            message: "User profile fetched successfully",
+            data: userWithPosts
+        })
+    }
+
+
 
 }
 

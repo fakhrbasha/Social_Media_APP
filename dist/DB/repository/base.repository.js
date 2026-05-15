@@ -11,8 +11,8 @@ class BaseRepository {
     async findById(id) {
         return this.model.findById(id);
     }
-    async findOne({ filter, projection }) {
-        return this.model.findOne(filter, projection);
+    async findOne({ filter, projection, options }) {
+        return this.model.findOne(filter, projection, options);
     }
     async find({ filter, projection, options }) {
         return this.model.find(filter, projection)
@@ -56,6 +56,9 @@ class BaseRepository {
             },
             data
         };
+    }
+    async delete(id) {
+        return this.model.findByIdAndDelete(id);
     }
 }
 exports.default = BaseRepository;

@@ -25,4 +25,10 @@ authRouter.post('/upload-files', multerCloud().array("attachments", 10), UserSer
 
 
 authRouter.post("/uploadFileWithoutMulter", authentication, UserService.uploadFileWithoutMulter)
+
+
+
+authRouter.get("/getMyProfile", authentication, UserService.getMyProfile)
+
+
 export default authRouter;

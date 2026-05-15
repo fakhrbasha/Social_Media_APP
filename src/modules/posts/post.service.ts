@@ -17,6 +17,9 @@ import PostRepository from "../../DB/repository/post.repository";
 import fi from "zod/v4/locales/fi.js";
 import { AvailabilityEnum } from "../../common/enum/postEnum";
 import { PostAvailability } from "../../common/utils/post.utils";
+import { match } from "node:assert";
+import { populate } from "dotenv";
+import path from "node:path";
 class postService {
 
 
@@ -107,6 +110,17 @@ class postService {
                     ...PostAvailability(req)
                 ],
                 ...searchQuery
+            },
+            // mongoose stream virtual populate to get post comments when get posts
+            populate: {
+                path: "comments",
+                match: {
+                    commentId: { $exists: false }
+                },
+                populate: [{
+                    path: "replies",
+                }]
+
             }
         })
 
@@ -130,6 +144,12 @@ class postService {
         const posts = await this._postModel.find({
             filter: {
                 createdBy: req.user._id
+            },
+            // to get post comments when get my posts
+            options: {
+                populate: {
+                    path: "comments",
+                }
             }
         })
         return res.status(200).json({
@@ -246,7 +266,7 @@ class postService {
         const { flag } = req.query;
 
         if (Array.isArray(postId)) {
-            return next(new Error("Invalid post id"));
+            throw new AppError("Invalid post Id", 400);
         }
 
         let updateQuery: any = {

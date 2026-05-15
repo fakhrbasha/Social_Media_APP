@@ -2,6 +2,8 @@
 
 import mongoose, { HydratedDocument, Types } from "mongoose";
 import { EmailEnum, GenderEnum, providerEnum, RoleEnum } from "../../common/enum/user.enum";
+import postModel from "./post.model";
+import CommentModel from "./comment.model";
 
 
 
@@ -85,6 +87,34 @@ userSchema.virtual("username").get(function (this: IUser) {
     this.lastName = lastName;
 })
 
+userSchema.virtual("posts", {
+    ref: "Post",
+    localField: "_id",
+    foreignField: "createdBy"
+});
+
+userSchema.pre(
+    "deleteOne",
+    { document: true, query: false },
+    async function () {
+
+        const user = this;
+
+        const posts = await postModel.find({
+            createdBy: user._id
+        });
+
+        const postIds = posts.map(p => p._id);
+
+        await CommentModel.deleteMany({
+            postId: { $in: postIds }
+        });
+
+        await postModel.deleteMany({
+            createdBy: user._id
+        });
+    }
+);
 // userSchema.pre("save", function (this: HydratedDocument<IUser> & { is_new: boolean }) {
 //     console.log("=========== pre hook ============")
 //     // console.log(this);

@@ -34,15 +34,13 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-const commentSchema = new mongoose_1.default.Schema({
+const CommentSchema = new mongoose_1.default.Schema({
     content: {
-        type: String, min: 3,
+        type: String, min: 3, required: function () {
+            return !this.attachments?.length;
+        }
     },
-    post: {
-        type: mongoose_1.Types.ObjectId,
-        ref: "Post",
-        required: true
-    },
+    attachments: [String],
     createdBy: {
         type: mongoose_1.Types.ObjectId,
         ref: "User",
@@ -56,6 +54,18 @@ const commentSchema = new mongoose_1.default.Schema({
             type: mongoose_1.Types.ObjectId,
             ref: "User",
         }],
+    folderId: {
+        type: String,
+    },
+    postId: {
+        type: mongoose_1.Types.ObjectId,
+        ref: "Post",
+        required: true
+    },
+    commentId: {
+        type: mongoose_1.Types.ObjectId,
+        ref: "Comment"
+    }
 }, {
     timestamps: true,
     strict: true,
@@ -63,5 +73,10 @@ const commentSchema = new mongoose_1.default.Schema({
     toJSON: { virtuals: true },
     toObject: { virtuals: true }
 });
-const commentModel = mongoose_1.default.models.Comment || mongoose_1.default.model("Comment", commentSchema);
-exports.default = commentModel;
+CommentSchema.virtual("replies", {
+    ref: "Comment",
+    localField: "_id",
+    foreignField: "commentId"
+});
+const CommentModel = mongoose_1.default.models.Comment || mongoose_1.default.model("Comment", CommentSchema);
+exports.default = CommentModel;

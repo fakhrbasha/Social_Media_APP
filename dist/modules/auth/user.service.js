@@ -279,5 +279,30 @@ class UserService {
         const { url, Key } = await this._s3Service.createPreSignedUrl({ path: "users", fileName, ContentType });
         return res.status(201).json({ message: "done", data: { url, Key } });
     };
+    getMyProfile = async (req, res, next) => {
+        const user = await this._userModel.findOne({
+            filter: { _id: req.user._id }
+        });
+        if (!user)
+            throw new global_error_handling_1.AppError("user not found", 404);
+        const userWithPosts = await this._userModel.findOne({
+            filter: { _id: req.user._id },
+            options: {
+                populate: [
+                    {
+                        path: "posts",
+                        model: "post",
+                        select: "_id content images attachments tags createdAt updatedAt likes commentsCount repliesCount -createdBy",
+                    }
+                ]
+            }
+        });
+        if (!userWithPosts)
+            throw new global_error_handling_1.AppError("user not found", 404);
+        return res.status(200).json({
+            message: "User profile fetched successfully",
+            data: userWithPosts
+        });
+    };
 }
 exports.default = new UserService();

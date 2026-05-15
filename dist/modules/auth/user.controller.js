@@ -57,4 +57,5 @@ authRouter.post('/upload-image', authentication_1.authentication, (0, multer_clo
 authRouter.post('/upload-large-file', authentication_1.authentication, (0, multer_cloud_1.default)({ store_type: multer_enum_1.Store_Enum.disk }).single("attachment"), user_service_1.default.uploadLargeFile);
 authRouter.post('/upload-files', (0, multer_cloud_1.default)().array("attachments", 10), user_service_1.default.uploadFiles);
 authRouter.post("/uploadFileWithoutMulter", authentication_1.authentication, user_service_1.default.uploadFileWithoutMulter);
+authRouter.get("/getMyProfile", authentication_1.authentication, user_service_1.default.getMyProfile);
 exports.default = authRouter;

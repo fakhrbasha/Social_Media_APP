@@ -1,37 +1,33 @@
 
 
-
-
-
 import mongoose, { HydratedDocument, Types } from "mongoose";
-import { AllowCommentEnum, AvailabilityEnum } from "../../common/enum/postEnum";
 
 
 
 
 export interface IComment {
-    content: string,
-    post: Types.ObjectId,
-    createdBy: Types.ObjectId,
+    content?: string
+    attachments?: string[]
 
+    createdBy: Types.ObjectId
+
+    tags?: Types.ObjectId[],
     likes: Types.ObjectId[],
-    tags: Types.ObjectId[],
-    reply: Types.ObjectId[],
+    postId: Types.ObjectId,
 
-
+    folderId: string,
+    commentId?: Types.ObjectId
 
 }
 
 
-const commentSchema = new mongoose.Schema<IComment>({
+const CommentSchema = new mongoose.Schema<IComment>({
     content: {
-        type: String, min: 3,
+        type: String, min: 3, required: function (this) {
+            return !this.attachments?.length
+        }
     },
-    post: {
-        type: Types.ObjectId,
-        ref: "Post",
-        required: true
-    },
+    attachments: [String],
 
     createdBy: {
         type: Types.ObjectId,
@@ -49,6 +45,24 @@ const commentSchema = new mongoose.Schema<IComment>({
     }],
 
 
+    // friends: {
+    //     type: [Types.ObjectId],
+    //     ref: "User"
+    // },
+
+    folderId: {
+        type: String,
+    },
+    postId: {
+        type: Types.ObjectId,
+        ref: "Post",
+        required: true
+    },
+    commentId: {
+        type: Types.ObjectId,
+        ref: "Comment"
+    }
+
 
 }, {
     timestamps: true,
@@ -58,10 +72,14 @@ const commentSchema = new mongoose.Schema<IComment>({
     toObject: { virtuals: true }
 })
 
+CommentSchema.virtual("replies", {
+    ref: "Comment",
+    localField: "_id",
+    foreignField: "commentId"
+})
 
 
+const CommentModel = mongoose.models.Comment || mongoose.model<IComment>("Comment", CommentSchema);
 
-const commentModel = mongoose.models.Comment || mongoose.model<IComment>("Comment", commentSchema);
-
-export default commentModel;
+export default CommentModel;
 export type CommentDocument = HydratedDocument<IComment>;

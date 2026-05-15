@@ -8,8 +8,10 @@ import multerCloud from "../../common/middleware/multer.cloud";
 import { Store_Enum } from "../../common/enum/multer.enum";
 import postService from "./post.service";
 import * as PS from "./post.validation";
+import commentRouter from "../Comments/comment.controller";
 const postRouter = Router();
 
+postRouter.use("/:postId/comment", commentRouter)
 
 postRouter.post("/",
     authentication,

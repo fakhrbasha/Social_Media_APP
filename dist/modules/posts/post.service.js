@@ -88,6 +88,15 @@ class postService {
                     ...(0, post_utils_1.PostAvailability)(req)
                 ],
                 ...searchQuery
+            },
+            populate: {
+                path: "comments",
+                match: {
+                    commentId: { $exists: false }
+                },
+                populate: [{
+                        path: "replies",
+                    }]
             }
         });
         return res.status(200).json({
@@ -102,6 +111,11 @@ class postService {
         const posts = await this._postModel.find({
             filter: {
                 createdBy: req.user._id
+            },
+            options: {
+                populate: {
+                    path: "comments",
+                }
             }
         });
         return res.status(200).json({
@@ -210,7 +224,7 @@ class postService {
         const { postId } = req.params;
         const { flag } = req.query;
         if (Array.isArray(postId)) {
-            return next(new Error("Invalid post id"));
+            throw new global_error_handling_1.AppError("Invalid post Id", 400);
         }
         let updateQuery = {
             $addToSet: { likes: req.user._id }

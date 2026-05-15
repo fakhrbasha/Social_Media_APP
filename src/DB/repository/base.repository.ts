@@ -19,13 +19,16 @@ abstract class BaseRepository<TDocument> {
 
     async findOne({
         filter,
-        projection
+        projection,
+        options
     }: {
         filter: QueryFilter<TDocument>,
         projection?: ProjectionType<TDocument> // select specific fields to return from the document, we can use the projection parameter to specify which fields we want to return from the document, so that we can reduce the amount of data that is returned from the database and improve the performance of the application.
+        options?: QueryOptions<TDocument>
+
     }):
         Promise<HydratedDocument<TDocument> | null> {
-        return this.model.findOne(filter, projection);
+        return this.model.findOne(filter, projection, options);
     }
     async find({
         filter,
@@ -118,9 +121,10 @@ abstract class BaseRepository<TDocument> {
 
     }
 
-    // async delete(id: Types.ObjectId): Promise<HydratedDocument<TDocument> | null> {
-    //     return this.model.findByIdAndDelete(id);
-    // }
+    async delete(id: Types.ObjectId): Promise<HydratedDocument<TDocument> | null> {
+        return this.model.findByIdAndDelete(id);
+    }
+
 
 
 }
