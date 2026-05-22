@@ -18,6 +18,8 @@ import commentRouter from "./modules/Comments/comment.controller";
 import { GraphQLInt, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLSchema, GraphQLString } from "graphql";
 import { createHandler } from "graphql-http/lib/use/express";
 import id from "zod/v4/locales/id.js";
+import { gql_schema } from "./modules/graphql/graphQL.schema";
+import { authentication } from "./common/middleware/authentication";
 const app: express.Application = express();
 
 const port: number = Number(PORT); // because process.env.PORT is a string, we need to convert it to a number
@@ -69,58 +71,7 @@ const bootstrap = () => {
     checkConnection()
     redisService.connect()
     app.use(cors(), helmet(), limiter)
-
-    const users = [
-        { id: 1, name: "Ahmed" },
-        { id: 2, name: "Fakhr" },
-        { id: 3, name: "Ali" },
-    ]
-
-
-
-    const userType = new GraphQLObjectType({
-        name: "User",
-        description: "User type",
-        fields: {
-            id: { type: GraphQLInt },
-            name: { type: GraphQLString }
-        }
-    })
-
-    const schema = new GraphQLSchema({
-        query: new GraphQLObjectType({
-            // name disc fields
-            name: "RootQueryType",
-            description: "Root Query",
-
-            fields: {
-                // endpoint name 
-                // hello: {
-                //     // type and resolve function to return 
-                //     type: GraphQLString,
-                //     resolve: () => {
-                //         return "Hello World!"
-                //     }
-                // }
-
-                getUser: {
-                    type: userType,
-                    args: { name: { type: new GraphQLNonNull(GraphQLString) } },
-                    resolve: (parent, args) => {
-                        return users.find(user => user.name === args.name)
-                    }
-                },
-                listUsers: {
-                    type: new GraphQLList(userType),
-                    resolve: () => {
-                        return users
-                    }
-                }
-            }
-        })
-    })
-
-    app.use('/graphql', createHandler({ schema }))
+    app.use('/graphql', authentication, createHandler({ schema: gql_schema, context: (req) => ({ req }) }))
 
 
     app.get("/", (req: Request, res: Response, next: NextFunction) => {
@@ -189,10 +140,13 @@ const bootstrap = () => {
 
     app.use(globalErrorHandler)
 
-    app.listen(port, () => {
-        console.log(`Server is running on port ${port}`);
-    })
+    if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
+        app.listen(port, () => {
+            console.log(`Server is running on port ${port}`);
+        });
+    }
 
 }
 
+export { app };
 export default bootstrap;

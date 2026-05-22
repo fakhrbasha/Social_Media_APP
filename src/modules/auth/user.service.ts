@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { AppError } from "../../common/utils/global-error-handling";
 import userModel, { IUser } from "../../DB/models/user.model";
-import { HydratedDocument, Model } from "mongoose";
+import { HydratedDocument, Model, Types } from "mongoose";
 import UserRepository from "../../DB/repository/user.repository";
 import { encrypt } from "../../common/utils/security/encrypt";
 import { Compare, Hash } from "../../common/utils/security/hash";
@@ -18,6 +18,7 @@ import { eventEmitter } from "../../common/utils/mail/email.event";
 import { S3Service } from "../../common/services/s3.service";
 import { Store_Enum } from "../../common/enum/multer.enum";
 import NotificationServiceConfig from "../../common/services/notification.service";
+import { users } from "./graphql/user.type";
 class UserService {
 
     // private readonly _userModel: Model<IUser> = userModel
@@ -361,7 +362,17 @@ class UserService {
         })
     }
 
-
+    // -------------------- graph-QL -----------------------//
+    getUser = async (userId: Types.ObjectId) => {
+        return await this._userModel.findOne({
+            filter: {
+                _id: userId
+            }
+        })
+    }
+    getUsers = async () => {
+        return await this._userModel.find({ filter: {} })
+    }
 
 }
 

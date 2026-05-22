@@ -70,3 +70,6 @@ export const resendOtpSchema = {
         email: z.string({ error: "email is required" }).email(),
     })
 }
+export const getUSerSchema = z.strictObject({
+    token: z.string()
+})

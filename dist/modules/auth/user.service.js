@@ -304,5 +304,15 @@ class UserService {
             data: userWithPosts
         });
     };
+    getUser = async (userId) => {
+        return await this._userModel.findOne({
+            filter: {
+                _id: userId
+            }
+        });
+    };
+    getUsers = async () => {
+        return await this._userModel.find({ filter: {} });
+    };
 }
 exports.default = new UserService();
