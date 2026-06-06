@@ -18,6 +18,7 @@ const post_controller_1 = __importDefault(require("./modules/posts/post.controll
 const express_2 = require("graphql-http/lib/use/express");
 const graphQL_schema_1 = require("./modules/graphql/graphQL.schema");
 const authentication_1 = require("./common/middleware/authentication");
+const socket_io_1 = require("socket.io");
 const app = (0, express_1.default)();
 exports.app = app;
 const port = Number(config_service_1.PORT);
@@ -49,10 +50,22 @@ const bootstrap = () => {
         throw new global_error_handling_1.AppError(`Invalid URL ${req.originalUrl} with method ${req.method} not found`, 404);
     });
     app.use(global_error_handling_1.globalErrorHandler);
-    if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
-        app.listen(port, () => {
-            console.log(`Server is running on port ${port}`);
+    const httpServer = app.listen(port, () => {
+        console.log(`Server is running on port ${port}`);
+    });
+    const io = new socket_io_1.Server(httpServer, {
+        cors: {
+            origin: "*"
+        }
+    });
+    io.on("connection", (socket) => {
+        console.log("a user connected with id " + socket.id);
+        socket.on("hi", (data) => {
+            console.log("Received hi event with data:", data);
+            socket.to(data.id).emit("welcome", "Hello from the BE!");
+            socket.except(data.id).emit("welcome", "Hello from the BE!");
+            io.except(data.id).emit("welcome", "Hello from the BE!");
         });
-    }
+    });
 };
 exports.default = bootstrap;
