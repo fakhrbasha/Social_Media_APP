@@ -51,7 +51,8 @@ exports.signUpSchema = {
         address: z.string().min(10).max(100).optional(),
         phone: z.string().min(10).max(15).optional(),
         confirmed: z.boolean().optional(),
-        provider: z.enum(user_enum_1.providerEnum).optional()
+        provider: z.enum(user_enum_1.providerEnum).optional(),
+        friends: z.string().optional()
     }).refine((data) => {
         return data.password === data.confirmPassword;
     }, {

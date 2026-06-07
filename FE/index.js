@@ -2,7 +2,7 @@
 
 const clientIo = io("http://localhost:3000", {
     auth: {
-        token: `bearer ${localStorage.getItem("authorization")}`
+        authorization: `Bearer ${localStorage.getItem("authorization")}`
     }
 });
 // const clientIoAdmin = io("http://localhost:3000/admin");

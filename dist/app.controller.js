@@ -18,11 +18,11 @@ const post_controller_1 = __importDefault(require("./modules/posts/post.controll
 const express_2 = require("graphql-http/lib/use/express");
 const graphQL_schema_1 = require("./modules/graphql/graphQL.schema");
 const authentication_1 = require("./common/middleware/authentication");
-const socket_io_1 = require("socket.io");
+const socket_gateway_1 = __importDefault(require("./modules/realtime/socket.gateway"));
 const app = (0, express_1.default)();
 exports.app = app;
 const port = Number(config_service_1.PORT);
-const bootstrap = () => {
+const bootstrap = async () => {
     const limiter = (0, express_rate_limit_1.rateLimit)({
         windowMs: 15 * 60 * 1000,
         max: 100,
@@ -53,19 +53,6 @@ const bootstrap = () => {
     const httpServer = app.listen(port, () => {
         console.log(`Server is running on port ${port}`);
     });
-    const io = new socket_io_1.Server(httpServer, {
-        cors: {
-            origin: "*"
-        }
-    });
-    io.on("connection", (socket) => {
-        console.log("a user connected with id " + socket.id);
-        socket.on("hi", (data) => {
-            console.log("Received hi event with data:", data);
-            socket.to(data.id).emit("welcome", "Hello from the BE!");
-            socket.except(data.id).emit("welcome", "Hello from the BE!");
-            io.except(data.id).emit("welcome", "Hello from the BE!");
-        });
-    });
+    await socket_gateway_1.default.initIo(httpServer);
 };
 exports.default = bootstrap;

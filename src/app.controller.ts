@@ -22,6 +22,7 @@ import { gql_schema } from "./modules/graphql/graphQL.schema";
 import { authentication } from "./common/middleware/authentication";
 import { Server } from "socket.io";
 import { authenticationFunc } from "./common/utils/authFunction";
+import SocketGateway from "./modules/realtime/socket.gateway"
 const app: express.Application = express();
 
 const port: number = Number(PORT); // because process.env.PORT is a string, we need to convert it to a number
@@ -29,7 +30,7 @@ const port: number = Number(PORT); // because process.env.PORT is a string, we n
 
 //
 
-const bootstrap = () => {
+const bootstrap = async () => {
 
     const limiter = rateLimit({
         windowMs: 15 * 60 * 1000, // 15 minutes
@@ -146,64 +147,46 @@ const bootstrap = () => {
     const httpServer = app.listen(port, () => {
         console.log(`Server is running on port ${port}`);
     });
-    const io = new Server(httpServer, {
-        cors: {
-            origin: "*"
-        }
-    })
-    // auth
+    await SocketGateway.initIo(httpServer)
+    // console.log(socket)
+    // console.log("---------------------------------")
 
-    io.use(async (socket, next) => {
-        try {
-            console.log("socket handshake auth", socket.handshake.auth.authorization);
-            const { user } = await authenticationFunc(socket.handshake.auth.authorization)
-            socket.data.user = user
-            next()
-        } catch (err) {
-            next(new AppError("Unauthorized", 401))
-        }
-    })
-    io.on("connection", (socket) => {
-        // console.log(socket)
-        // console.log("---------------------------------")
+    // console.log("a user connected with id " + socket.id);
+    // console.log("user data", socket.data.user);
 
-        console.log("a user connected with id " + socket.id);
-        console.log("user data", socket.data.user);
+    // socket.emit("welcome", "Hello from the BE!");
+    // when make two or more tap and need to send message to all of them we can use io.emit instead of socket.emit because socket.emit will send the message to the current connected client only but io.emit will send the message to all connected clients
+    // io.emit("welcome", "Hello from the BE!");
+    // send to all without current client\
+    // socket.broadcast.emit("welcome", "Hello from the BE!");
+    // send to specific client
+    // socket.to("specific socket id").emit("welcome", "Hello from the BE!");
+    // and in frontend store id in local storage and send it with every request to identify the client and send message to it
 
-        // socket.emit("welcome", "Hello from the BE!");
-        // when make two or more tap and need to send message to all of them we can use io.emit instead of socket.emit because socket.emit will send the message to the current connected client only but io.emit will send the message to all connected clients
-        // io.emit("welcome", "Hello from the BE!");
-        // send to all without current client\
-        // socket.broadcast.emit("welcome", "Hello from the BE!");
-        // send to specific client
-        // socket.to("specific socket id").emit("welcome", "Hello from the BE!");
-        // and in frontend store id in local storage and send it with every request to identify the client and send message to it
+    // socket.on("hi", (data: any) => {
+    //     console.log("Received hi event with data:", data);
+    //     // take id and create in local storage socketId and add id and this id only send message to it
+    //     socket.to(data.id).emit("welcome", "Hello from the BE!");
 
-        socket.on("hi", (data: any) => {
-            console.log("Received hi event with data:", data);
-            // take id and create in local storage socketId and add id and this id only send message to it
-            socket.to(data.id).emit("welcome", "Hello from the BE!");
+    //     // send to array 
 
-            // send to array 
+    //     // send to all without specific client and sender
+    //     socket.except(data.id).emit("welcome", "Hello from the BE!");
 
-            // send to all without specific client and sender
-            socket.except(data.id).emit("welcome", "Hello from the BE!");
-
-            // send to all without specific clients  
-            io.except(data.id).emit("welcome", "Hello from the BE!");
-            //
-        })
+    //     // send to all without specific clients  
+    //     io.except(data.id).emit("welcome", "Hello from the BE!");
+    //
 
 
 
-        // socket.on("sayHi", (data, cb) => {
-        //     console.log("Received sayHi event with data:", data);
-        //     // Emit a response back to the client
-        //     // socket.emit("sayHiBack", { message: "Hi from the server!" });
-        //     cb({ message: "Hi from the server!" })
-        // })
+    // socket.on("sayHi", (data, cb) => {
+    //     console.log("Received sayHi event with data:", data);
+    //     // Emit a response back to the client
+    //     // socket.emit("sayHiBack", { message: "Hi from the server!" });
+    //     cb({ message: "Hi from the server!" })
+    // })
 
-    }) // start connection on event name connection
+    // }) // start connection on event name connection
     // io.of('/admin').on("connection", (socket) => {
     //     // console.log(socket)
     //     console.log("================================")

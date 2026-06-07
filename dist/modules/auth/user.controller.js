@@ -43,7 +43,9 @@ const validation_1 = require("../../common/middleware/validation");
 const authentication_1 = require("../../common/middleware/authentication");
 const multer_cloud_1 = __importDefault(require("../../common/middleware/multer.cloud"));
 const multer_enum_1 = require("../../common/enum/multer.enum");
+const chat_controller_1 = __importDefault(require("../chat/chat.controller"));
 const authRouter = (0, express_1.Router)();
+authRouter.use('/:userId/chat', chat_controller_1.default);
 authRouter.post('/signup', (0, validation_1.validation)(userValidation.signUpSchema), user_service_1.default.signup);
 authRouter.post('/confirm-email', (0, validation_1.validation)(userValidation.confirmEmailSchema), user_service_1.default.confirmEmail);
 authRouter.post('/signin', (0, validation_1.validation)(userValidation.signInSchema), user_service_1.default.signin);
@@ -58,4 +60,5 @@ authRouter.post('/upload-large-file', authentication_1.authentication, (0, multe
 authRouter.post('/upload-files', (0, multer_cloud_1.default)().array("attachments", 10), user_service_1.default.uploadFiles);
 authRouter.post("/uploadFileWithoutMulter", authentication_1.authentication, user_service_1.default.uploadFileWithoutMulter);
 authRouter.get("/getMyProfile", authentication_1.authentication, user_service_1.default.getMyProfile);
+authRouter.get("/getProfile", authentication_1.authentication, user_service_1.default.getProfile);
 exports.default = authRouter;

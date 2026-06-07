@@ -350,7 +350,8 @@ class UserService {
                         path: "posts",
                         model: "post",
                         select: "_id content images attachments tags createdAt updatedAt likes commentsCount repliesCount -createdBy",
-                    }
+                    },
+
                 ]
             }
         })
@@ -361,7 +362,24 @@ class UserService {
             data: userWithPosts
         })
     }
-
+    getProfile = async (req: Request, res: Response, next: NextFunction) => {
+        const user = await this._userModel.findOne({
+            filter: { _id: req.user._id as Types.ObjectId },
+            options: {
+                populate: [
+                    {
+                        path: "friends"
+                    }
+                ]
+            }
+        })
+        return res.status(200).json({
+            message: "User profile fetched successfully",
+            data: user
+        })
+        // if (!user)
+        //     throw new AppError("user not found", 404)
+    }
     // -------------------- graph-QL -----------------------//
     getUser = async (userId: Types.ObjectId) => {
         return await this._userModel.findOne({

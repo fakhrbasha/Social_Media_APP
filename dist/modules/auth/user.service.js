@@ -293,7 +293,7 @@ class UserService {
                         path: "posts",
                         model: "post",
                         select: "_id content images attachments tags createdAt updatedAt likes commentsCount repliesCount -createdBy",
-                    }
+                    },
                 ]
             }
         });
@@ -302,6 +302,22 @@ class UserService {
         return res.status(200).json({
             message: "User profile fetched successfully",
             data: userWithPosts
+        });
+    };
+    getProfile = async (req, res, next) => {
+        const user = await this._userModel.findOne({
+            filter: { _id: req.user._id },
+            options: {
+                populate: [
+                    {
+                        path: "friends"
+                    }
+                ]
+            }
+        });
+        return res.status(200).json({
+            message: "User profile fetched successfully",
+            data: user
         });
     };
     getUser = async (userId) => {

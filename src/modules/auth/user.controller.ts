@@ -6,8 +6,10 @@ import { authentication } from "../../common/middleware/authentication";
 import { auth } from "google-auth-library";
 import multerCloud from "../../common/middleware/multer.cloud";
 import { Store_Enum } from "../../common/enum/multer.enum";
+import chatRouter from "../chat/chat.controller";
 const authRouter = Router();
 
+authRouter.use('/:userId/chat', chatRouter)
 
 authRouter.post('/signup', validation(userValidation.signUpSchema), UserService.signup);
 authRouter.post('/confirm-email', validation(userValidation.confirmEmailSchema), UserService.confirmEmail);
@@ -29,6 +31,7 @@ authRouter.post("/uploadFileWithoutMulter", authentication, UserService.uploadFi
 
 
 authRouter.get("/getMyProfile", authentication, UserService.getMyProfile)
+authRouter.get("/getProfile", authentication, UserService.getProfile)
 
 
 export default authRouter;

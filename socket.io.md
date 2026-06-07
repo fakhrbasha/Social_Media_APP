@@ -251,3 +251,185 @@ const clientIo = io('http://localhost:3000', {
   },
 });
 ```
+
+#### auth and store socketId in redis
+
+```js
+io.use(async (socket, next) => {
+  try {
+    console.log('socket handshake auth', socket.handshake.auth.authorization);
+
+    const { user } = await authenticationFunc(
+      socket.handshake.auth.authorization ||
+        socket.handshake.headers.authorization,
+    );
+
+    socket.data.user = user;
+
+    next();
+  } catch (err) {
+    console.log('AUTH ERROR =>', err);
+    next(new AppError('Unauthorized', 401));
+  }
+});
+```
+
+- and this make connect
+
+```js
+io.on('connection', async (socket) => {
+  console.log('hi');
+  redisService.addSocket({ userId: socket.data.user._id, socketId: socket.id });
+  console.log({
+    userSocketId: await redisService.getSockets(socket.data.user._id),
+  });
+
+  // to remove socketid when disconnect
+  socket.on('disconnect', async () => {
+    await redisService.removeSocket({
+      userId: socket.data.user._id,
+      socketId: socket.id,
+    });
+    console.log({
+      userSocketIdsAfterDisconnect: await redisService.getSockets(
+        socket.data.user._id,
+      ),
+    });
+  });
+});
+```
+
+### folder structure
+
+![folder structure](image.png)
+
+- first create module `realtime` include `socket.gateway.ts`
+- add all code about `io`
+- `socket.gateway.ts`
+
+```ts
+import { Server } from 'socket.io';
+import { Server as httpServer } from 'http';
+import { authenticationFunc } from '../../common/utils/authFunction';
+import redisService from '../../common/services/redis.service';
+import { AppError } from '../../common/utils/global-error-handling';
+import chatGateway from '../chat/realtime/chat.gateway';
+
+class SocketGateway {
+  constructor() {}
+
+  initIo = async (httpServer: httpServer) => {
+    const io = new Server(httpServer, {
+      cors: {
+        origin: '*',
+      },
+    });
+    // auth
+
+    io.use(async (socket, next) => {
+      try {
+        console.log(
+          'socket handshake auth',
+          socket.handshake.auth.authorization,
+        );
+
+        const { user } = await authenticationFunc(
+          socket.handshake.auth.authorization ||
+            socket.handshake.headers.authorization,
+        );
+
+        socket.data.user = user;
+
+        next();
+      } catch (err) {
+        console.log('AUTH ERROR =>', err);
+        next(new AppError('Unauthorized', 401));
+      }
+    });
+    io.on('connection', async (socket) => {
+      redisService.addSocket({
+        userId: socket.data.user._id,
+        socketId: socket.id,
+      });
+      // console.log({ userSocketId: await redisService.getSockets(socket.data.user._id) })
+      await chatGateway.registerEvent(socket);
+      // from gateway -> chatEvent -> service
+      // to remove socketid when disconnect
+      socket.on('disconnect', async () => {
+        await redisService.removeSocket({
+          userId: socket.data.user._id,
+          socketId: socket.id,
+        });
+        console.log({
+          userSocketIdsAfterDisconnect: await redisService.getSockets(
+            socket.data.user._id,
+          ),
+        });
+      });
+    });
+  };
+}
+
+export default new SocketGateway();
+```
+
+- then create module chat include dir `realtime` contain `chat.event.ts` and `chat.gateway.ts` and chat contain two fils `controller` and `service`
+- first in `socket.gateway.ts` make event listener
+
+```ts
+await chatGateway.registerEvent(socket);
+```
+
+- then go to `chat.gateway.ts` to create this listener
+
+```ts
+import { Socket } from 'socket.io';
+import chatEvent from './chat.event';
+
+class ChatGateway {
+  constructor() {}
+
+  registerEvent = async (socket: Socket) => {
+    chatEvent.sayHi(socket);
+  };
+}
+
+export default new ChatGateway();
+```
+
+- then go to `chat.event.ts` to create this event
+
+```ts
+import { Socket } from 'socket.io';
+import chatService from '../chat.service';
+
+class ChatEvent {
+  constructor() {}
+
+  sayHi = async (socket: Socket) => {
+    socket.on('sayHi', (data) => {
+      chatService.sayHi(data);
+    });
+  };
+}
+export default new ChatEvent();
+```
+
+- and in the end go to service
+
+```ts
+class ChatService {
+  constructor() {}
+
+  // rest apis
+
+  // socket.io
+
+  sayHi = async (data: any) => {
+    console.log(data);
+  };
+}
+export default new ChatService();
+```
+
+#### model

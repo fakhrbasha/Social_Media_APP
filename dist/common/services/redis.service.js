@@ -154,5 +154,23 @@ class RedisService {
     removeFCMUser(userId) {
         return this.client.del(this.key(userId));
     }
+    keySocket(userId) {
+        return `user:Socket:${userId}`;
+    }
+    addSocket({ userId, socketId }) {
+        return this.client.sAdd(this.key(userId), socketId);
+    }
+    removeSocket({ userId, socketId }) {
+        return this.client.sRem(this.key(userId), socketId);
+    }
+    getSockets(userId) {
+        return this.client.sMembers(this.key(userId));
+    }
+    hasSocket({ userId }) {
+        return this.client.sCard(this.key(userId));
+    }
+    removeSocketUser(userId) {
+        return this.client.del(this.key(userId));
+    }
 }
 exports.default = new RedisService();

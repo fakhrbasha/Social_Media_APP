@@ -20,7 +20,8 @@ export const signUpSchema = {
             address: z.string().min(10).max(100).optional(),
             phone: z.string().min(10).max(15).optional(),
             confirmed: z.boolean().optional(),
-            provider: z.enum(providerEnum).optional()
+            provider: z.enum(providerEnum).optional(),
+            friends: z.string().optional()
 
         }).refine((data) => {
             return data.password === data.confirmPassword

@@ -176,6 +176,26 @@ class RedisService {
     }
 
 
+    keySocket(userId: Types.ObjectId) {
+        return `user:Socket:${userId}`
+    }
+    addSocket({ userId, socketId }: { userId: Types.ObjectId, socketId: string }) {
+        return this.client.sAdd(this.key(userId), socketId)
+    }
+    removeSocket({ userId, socketId }: { userId: Types.ObjectId, socketId: string }) {
+        return this.client.sRem(this.key(userId), socketId)
+    }
+    getSockets(userId: Types.ObjectId) {
+        return this.client.sMembers(this.key(userId))
+    }
+    hasSocket({ userId }: { userId: Types.ObjectId }) {
+        return this.client.sCard(this.key(userId))
+    }
+    removeSocketUser(userId: Types.ObjectId) {
+        return this.client.del(this.key(userId))
+    }
+
+
 
 }
 
